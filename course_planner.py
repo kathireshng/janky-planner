@@ -52,17 +52,21 @@ class Semester:
     def is_summer_sem(self) -> bool:
         return self.name % 3 == 0
 
-    def _get_all_incompatiblities(self) -> list[str]:
+    def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
         for course in self.get_courses():
             incomp_list.append(course.get_incompatible())
         return incomp_list
 
+    def get_incompatibilities(self) -> list[str]:
+        incomp_list = []
+        for course_name in self._get_possible_incompatiblities():
+            if course_name in self.get_course_names():
+                incomp_list.append(course_name)
+        return incomp_list
+    
     def any_incompatibilites(self) -> bool:
-        for course in self._get_all_incompatiblities():
-            if course in self.get_course_names():
-                return True
-        return False
+        return bool(self.get_incompatibilities)
 
 
 class Plan: #TODO Implement method or methods to check that prerequisistes have been met.
