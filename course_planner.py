@@ -95,7 +95,7 @@ class Plan:
         pass
 
     def are_prerequisities_met(self) -> bool:
-        
+        pass
 
     def are_incompatibilites_met(self) -> bool:
         for semester in self.get_semesters():
