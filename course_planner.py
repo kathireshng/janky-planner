@@ -40,6 +40,9 @@ class Semester:
             print(ERR_MSG_TOO_MANY_COURSES)
             self.courses = list(course1, course2)
 
+    def get_name(self):
+        return self.name
+
     def get_courses(self) -> list[Course]:
         return self.courses
 
@@ -69,21 +72,33 @@ class Semester:
         return bool(self.get_incompatibilities)
 
 
-class Plan: #TODO Implement method or methods to check that prerequisistes have been met.
-    def __init__(self) -> None:
+class Plan:
+    def __init__(self, semesters: list[Semester]) -> None:
+        self.semesters = semesters
+
+    def _purge_repeated_sems(self): #FIXME Finish funcitonality to check semesters
         pass
+
+    def get_semesters(self) -> list[Semester]:
+        return self.semesters
 
     def get_required_courses(self) -> list[str]:
         pass
 
-    def add_course(self) -> None:
+    def add_course(self, course: Course, sem: Semester) -> None:
         pass
 
-    def remove_course(self) -> None:
+    def remove_course(self, course: Course) -> None:
         pass
 
     def swap_courses(course_1: str, course_2: str) -> None:
         pass
 
     def are_prerequisities_met(self) -> bool:
-        pass
+        
+
+    def are_incompatibilites_met(self) -> bool:
+        for semester in self.get_semesters():
+            if semester.get_incompatibilities():
+                return True
+        return False
