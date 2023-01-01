@@ -69,15 +69,20 @@ class Semester:
         return incomp_list
     
     def any_incompatibilites(self) -> bool:
-        return bool(self.get_incompatibilities)
+        return bool(self.get_incompatibilities())
 
 
 class Plan:
     def __init__(self, semesters: list[Semester]) -> None:
         self.semesters = semesters
+        self._purge_repeated_sems()
 
-    def _purge_repeated_sems(self): #FIXME Finish funcitonality to check semesters
-        pass
+    def _purge_repeated_sems(self): 
+        for semA in self.get_semesters():
+            for semB in self.get_semesters():
+                if semA.get_name() == semB.get_name():
+                    self.semesters.remove(semB)
+                    self._purge_repeated_sems() #TODO Implement error message to inform user of semester duplication.
 
     def get_semesters(self) -> list[Semester]:
         return self.semesters
