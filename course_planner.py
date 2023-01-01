@@ -23,7 +23,10 @@ class Course:
         return course.get_code() in self.incomp
 
     def __str__(self) -> str:
-        pass
+        return self.get_code()
+
+    def __eq__(self, other: 'Course') -> bool:
+        return self.get_code() == other.get_code()
 
 
 class Semester:
@@ -39,6 +42,9 @@ class Semester:
         if self.is_summer_sem() and course3:
             print(ERR_MSG_TOO_MANY_COURSES)
             self.courses = list(course1, course2)
+
+    def _purge_repeated_courses(self):
+        pass
 
     def get_name(self):
         return self.name
