@@ -44,8 +44,12 @@ class Semester:
             self.courses = list(course1, course2)
 
     def _purge_repeated_courses(self):
-        pass
-
+        for courseA in self.get_courses():
+            for courseB in self.get_courses():
+                if courseA == courseB:
+                    self.courses.remove(courseB)
+                    self._purge_repeated_courses() #TODO Write global function that purges repeated courses or semesters for both
+                                                   # Course and Semester classes.
     def get_name(self):
         return self.name
 
