@@ -2,30 +2,66 @@ from constants import *
 import yaml
 
 class Course:
-    with open(SUMMARY_FILENAME, 'r') as file:
-        courseInfo = yaml.load(file)
+    """Class representing a given UQ course."""
 
-    def __init__(self, code) -> None:
+    with open(SUMMARY_FILENAME, 'r') as file:
+        courseInfo = yaml.safe_load(file)
+
+    def __init__(self, code: str) -> None:
+        """Initialises a new course object with the given course code.
+
+        Parameters:
+            code (str): The 4 letter - 4 digit UQ course code.
+        """
         self.code = code
         self.prereq = self.courseInfo[code][PREREQ]
         self.incomp = self.courseInfo[code][INCOMP]
     
     def get_code(self) -> str:
+        """(str): Returns the course's code."""
         return self.code
 
     def get_prerequisites(self) -> list[list[str]]:
+        """(list[list[str]]): Returns a nested list of the course's 
+        prerequisites' codes. 
+
+        Example: 
+            Course('ELEC2400').get_prerequisites() returns 
+            [['MATH1051', 'MATH1071'], ['MATH1052', 'MATH1072'], ['ENGG1300']]
+
+            which represents: (MATH1051 or MATH1071) and (MATH1052 or MATH1072)
+            and ENGG1300.
+        """
         return self.prereq
 
     def get_incompatible(self) -> list[str]:
+        """(list[str]): Returns a list of incompatible courses' codes"""
         return self.incomp
 
     def is_incompatible_with(self, course: 'Course') -> bool:
+        """Checks whether a given course object is incompatible with self.
+
+        Parameters:
+            course (Course): The other course to check incompatibility with.
+
+        Returns:
+            (bool): True iff self and other courses are incompatible.
+        """        
         return course.get_code() in self.incomp
 
     def __str__(self) -> str:
+        """(str): Returns course code as a string."""
         return self.get_code()
 
     def __eq__(self, other: 'Course') -> bool:
+        """Compares self and other courses' codes, true iff codes are equal.
+
+        Parameters:
+            course (Course): The other course to compare self with.
+        
+        Returns:
+            (bool): True iff both courses' codes are the same.
+        """
         return self.get_code() == other.get_code()
 
 
@@ -80,6 +116,12 @@ class Semester:
     
     def any_incompatibilites(self) -> bool:
         return bool(self.get_incompatibilities())
+    
+    def add_course(course: Course) -> None:
+        pass
+
+    def remove_course(course: Course) -> None:
+        pass
 
 
 class Plan:
