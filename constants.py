@@ -25,8 +25,15 @@ YR6__SEM1 = 16
 YR6__SEM2 = 17
 YR6__SUMMER = 18
 
-# Error messages
-ERR_MSG_TOO_MANY_COURSES = """
-Summer semesters can have at most two courses.\n
-Taking only first two courses entered.\n
-"""
+SEM_NAME_TUPLE = (None,
+    'Year 1 Semester 1', 'Year 1 Semester 2', 'Year 1 Summer Semester',
+    'Year 2 Semester 1', 'Year 2 Semester 2', 'Year 2 Summer Semester',
+    'Year 3 Semester 1', 'Year 3 Semester 2', 'Year 3 Summer Semester',
+    'Year 4 Semester 1', 'Year 4 Semester 2', 'Year 4 Summer Semester',
+    'Year 5 Semester 1', 'Year 5 Semester 2', 'Year 5 Summer Semester',
+    'Year 6 Semester 1', 'Year 6 Semester 2', 'Year 6 Summer Semester'
+)
+
+# Maximum courses for each sem
+SUM_SEM_MAX = 3
+REG_SEM_MAX = 4
