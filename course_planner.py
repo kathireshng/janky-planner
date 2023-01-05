@@ -66,19 +66,15 @@ class Course:
 
 
 class Semester:
-    def __init__(self, name, course1: Course, course2: Course, 
-                 course3=None, course4=None) -> None:
+    def __init__(self, name, courses: list[Course]=[]) -> None:
+        if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
+             print("This is a summer semester course which has at most two"
+                    "courses.\n More than two have been given.\n"
+                    "This semester will be created without any courses.")
+
         self.name = name
-        self.courses = list(course1, course2)
-        if course3:
-            self.courses.append(course3) 
-        if course4:
-            self.courses.append(course4)
-
-        if self.is_summer_sem() and course3:
-            print(ERR_MSG_TOO_MANY_COURSES)
-            self.courses = list(course1, course2)
-
+        self.courses = courses
+        
     def _purge_repeated_courses(self):
         for courseA in self.get_courses():
             for courseB in self.get_courses():
@@ -100,6 +96,11 @@ class Semester:
 
     def is_summer_sem(self) -> bool:
         return self.name % 3 == 0
+    
+    def is_full(self) -> bool:
+        if self.is_summer_sem():
+            return len(self.get_courses()) <= SUM_SEM_MAX
+        return len(self.get_courses()) <= REG_SEM_MAX
 
     def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
@@ -117,10 +118,10 @@ class Semester:
     def any_incompatibilites(self) -> bool:
         return bool(self.get_incompatibilities())
     
-    def add_course(course: Course) -> None:
+    def add_course(self, course: Course) -> None:
         pass
-
-    def remove_course(course: Course) -> None:
+        
+    def remove_course(self, course: Course) -> None:
         pass
 
 
