@@ -83,7 +83,7 @@ class Semester:
                     self._purge_repeated_courses() #TODO Write global function that purges repeated courses or semesters for both
                                                    # Course and Semester classes.
     def get_name(self):
-        return self.name
+        return SEM_NAME_TUPLE[self.name]
 
     def get_courses(self) -> list[Course]:
         return self.courses
@@ -102,6 +102,9 @@ class Semester:
             return len(self.get_courses()) <= SUM_SEM_MAX
         return len(self.get_courses()) <= REG_SEM_MAX
 
+    def get_max_courses(self) -> int:
+        return SUM_SEM_MAX if self.is_summer_sem() else REG_SEM_MAX
+
     def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
         for course in self.get_courses():
@@ -118,9 +121,17 @@ class Semester:
     def any_incompatibilites(self) -> bool:
         return bool(self.get_incompatibilities())
     
-    def add_course(self, course: Course) -> None:
-        pass
-        
+    def add_courses(self, courses: list[Course]) -> None:
+        if len(self.get_courses()) + len(courses) > self.get_max_courses():
+            print(
+                f"{self.get_name()} can contain at most "
+                f"{self.get_max_courses()} courses.\n"
+                f"At most, {REG_SEM_MAX - len(courses)} " 
+                "more courses can be added to this semester."
+            )
+            return
+        self.courses.extend(courses)
+
     def remove_course(self, course: Course) -> None:
         pass
 
