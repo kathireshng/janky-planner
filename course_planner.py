@@ -67,13 +67,14 @@ class Course:
 
 class Semester:
     def __init__(self, name, courses: list[Course]=[]) -> None:
-        if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
-             print("This is a summer semester course which has at most two"
-                    "courses.\n More than two have been given.\n"
-                    "This semester will be created without any courses.")
-
         self.name = name
         self.courses = courses
+        self._purge_repeated_courses()
+        if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
+            print("This is a summer semester course which has at most two"
+                    "courses.\n More than two have been given.\n"
+                    "This semester will be created without any courses.")
+            self.courses = []
         
     def _purge_repeated_courses(self):
         for courseA in self.get_courses():
@@ -154,8 +155,8 @@ class Plan:
     def get_required_courses(self) -> list[str]:
         pass
 
-    def add_course(self, course: Course, sem: Semester) -> None:
-        pass
+    def add_courses(self, courses: list[Course], sem: Semester) -> None:
+        sem.add_courses(courses)
 
     def remove_course(self, course: Course) -> None:
         pass
