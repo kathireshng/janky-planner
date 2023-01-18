@@ -66,8 +66,8 @@ class Course:
 
 
 class Semester:
-    def __init__(self, name, courses: list[Course]=[]) -> None:
-        self.name = name
+    def __init__(self, num: int, courses: list[Course]=[]) -> None:
+        self.num = num
         self.courses = courses
         self._purge_repeated_courses()
         if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
@@ -84,7 +84,7 @@ class Semester:
                     self._purge_repeated_courses() #TODO Write global function that purges repeated courses or semesters for both
                                                    # Course and Semester classes.
     def get_name(self):
-        return SEM_NAME_TUPLE[self.name]
+        return SEM_NAME_TUPLE[self.num]
 
     def get_courses(self) -> list[Course]:
         return self.courses
@@ -96,7 +96,7 @@ class Semester:
         return name_list
 
     def is_summer_sem(self) -> bool:
-        return self.name % 3 == 0
+        return self.num % 3 == 2
     
     def is_full(self) -> bool:
         if self.is_summer_sem():
@@ -138,16 +138,14 @@ class Semester:
 
 
 class Plan:
-    def __init__(self, semesters: list[Semester]) -> None:
-        self.semesters = semesters
-        self._purge_repeated_sems()
-
-    def _purge_repeated_sems(self): 
-        for semA in self.get_semesters():
-            for semB in self.get_semesters():
-                if semA.get_name() == semB.get_name():
-                    self.semesters.remove(semB)
-                    self._purge_repeated_sems() #TODO Implement error message to inform user of semester duplication.
+    def __init__(self) -> None:
+        self.semesters = self._init_semesters()
+    
+    def _init_semesters(self) -> list[Semester]:
+        sem_list = []
+        for sem_num in range(len(SEM_NAME_TUPLE)):
+            sem_list.append(Semester(sem_num))
+        return sem_list
 
     def get_semesters(self) -> list[Semester]:
         return self.semesters
@@ -172,3 +170,12 @@ class Plan:
             if semester.get_incompatibilities():
                 return True
         return False
+
+def main():
+    with open(SUMMARY_FILENAME, 'r') as file:
+        course_info = yaml.safe_load(SUMMARY_FILENAME)
+    
+    plan = Plan()
+
+if __name__ == '__main__':
+    main()

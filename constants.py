@@ -6,26 +6,26 @@ PREREQ = 'prerequisites'
 INCOMP = 'incompatible'
 
 # Semester names
-YR1__SEM1 = 1
-YR1__SEM2 = 2
-YR1__SUMMER = 3
-YR2__SEM1 = 4
-YR2__SEM2 = 5
-YR2__SUMMER = 6
-YR3__SEM1 = 7
-YR3__SEM2 = 8
-YR3__SUMMER = 9
-YR4__SEM1 = 10
-YR4__SEM2 = 11
-YR4__SUMMER = 12
-YR5__SEM1 = 13
-YR5__SEM2 = 14
-YR5__SUMMER = 15
-YR6__SEM1 = 16
-YR6__SEM2 = 17
-YR6__SUMMER = 18
+YR1_SEM1 = 0
+YR1_SEM2 = 1
+YR1_SUMMER = 2
+YR2_SEM1 = 3
+YR2_SEM2 = 4
+YR2_SUMMER = 5
+YR3_SEM1 = 6
+YR3_SEM2 = 7
+YR3_SUMMER = 8
+YR4_SEM1 = 9
+YR4_SEM2 = 10
+YR4_SUMMER = 11
+YR5_SEM1 = 12
+YR5_SEM2 = 13
+YR5_SUMMER = 14
+YR6_SEM1 = 15
+YR6_SEM2 = 16
+YR6_SUMMER = 17
 
-SEM_NAME_TUPLE = (None,
+SEM_NAME_TUPLE = (
     'Year 1 Semester 1', 'Year 1 Semester 2', 'Year 1 Summer Semester',
     'Year 2 Semester 1', 'Year 2 Semester 2', 'Year 2 Summer Semester',
     'Year 3 Semester 1', 'Year 3 Semester 2', 'Year 3 Summer Semester',
