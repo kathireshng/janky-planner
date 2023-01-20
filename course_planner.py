@@ -17,28 +17,13 @@ class Course:
         self.prereq = self.COURSE_INFO[code][PREREQ]
         self.incomp = self.COURSE_INFO[code][INCOMP]
     
-    def get_code(self) -> str:
-        """(str): Returns the course's code."""
-        return self.code
+    def is_prerequisite_to(self, other: 'Course') -> bool:
+        for sublist in other.prereq:
+            if self in other.prereq:
+                return True
+        return False
 
-    def get_prerequisites(self) -> list[list[str]]:
-        """(list[list[str]]): Returns a nested list of the course's 
-        prerequisites' codes. 
-
-        Example: 
-            Course('ELEC2400').get_prerequisites() returns 
-            [['MATH1051', 'MATH1071'], ['MATH1052', 'MATH1072'], ['ENGG1300']]
-
-            which represents: (MATH1051 or MATH1071) and (MATH1052 or MATH1072)
-            and ENGG1300.
-        """
-        return self.prereq
-
-    def get_incompatible(self) -> list[str]:
-        """(list[str]): Returns a list of incompatible courses' codes"""
-        return self.incomp
-
-    def is_incompatible_with(self, course: 'Course') -> bool:
+    def is_incompatible_with(self, other: 'Course') -> bool:
         """Checks whether a given course object is incompatible with self.
 
         Parameters:
@@ -47,13 +32,13 @@ class Course:
         Returns:
             (bool): True iff self and other courses are incompatible.
         """        
-        return course.get_code() in self.incomp
+        return other.code in self.incomp
 
     def __str__(self) -> str:
         """(str): Returns course code as a string."""
-        return self.get_code()
+        return self.code
 
-    def __eq__(self, other: 'Course') -> bool:
+    def __eq__(self, other: 'Course') -> bool: # TODO: Check whether equality works without this method (because __repr__ might be enough)
         """Compares self and other courses' codes, true iff codes are equal.
 
         Parameters:
@@ -62,13 +47,20 @@ class Course:
         Returns:
             (bool): True iff both courses' codes are the same.
         """
-        return self.get_code() == other.get_code()
+        return self.code == other.code
+    
+    def __repr__(self) -> str:
+        return self.code
+
+    def __hash__(self) -> int:
+        return hash(self.code)
 
 
 class Semester:
-    def __init__(self, num: int, courses: list[Course]=[]) -> None:
+    def __init__(self, num: int, *courses: Course) -> None:
         self.num = num
-        self.courses = courses
+        self.name = SEM_NAMES[num]
+        self.courses = list(courses)
         self._purge_repeated_courses()
         if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
             print("This is a summer semester course which has at most two"
@@ -77,22 +69,16 @@ class Semester:
             self.courses = []
         
     def _purge_repeated_courses(self):
-        for courseA in self.get_courses():
-            for courseB in self.get_courses():
+        for courseA in self.courses:
+            for courseB in self.courses:
                 if courseA == courseB:
                     self.courses.remove(courseB)
-                    self._purge_repeated_courses() #TODO Write global function that purges repeated courses or semesters for both
-                                                   # Course and Semester classes.
-    def get_name(self):
-        return SEM_NAMES[self.num]
-
-    def get_courses(self) -> list[Course]:
-        return self.courses
+                    self._purge_repeated_courses() 
 
     def get_course_names(self) -> list[str]:
         name_list = []
-        for course in self.get_courses():
-            name_list.append(course.get_code())
+        for course in self.courses:
+            name_list.append(course)
         return name_list
 
     def is_summer_sem(self) -> bool:
@@ -100,41 +86,50 @@ class Semester:
     
     def is_full(self) -> bool:
         if self.is_summer_sem():
-            return len(self.get_courses()) <= SUM_SEM_MAX
-        return len(self.get_courses()) <= REG_SEM_MAX
+            return len(self.courses) <= SUM_SEM_MAX
+        return len(self.courses) <= REG_SEM_MAX
 
-    def get_max_courses(self) -> int:
+    def max_course_capacity(self) -> int:
         return SUM_SEM_MAX if self.is_summer_sem() else REG_SEM_MAX
 
     def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
-        for course in self.get_courses():
-            incomp_list.append(course.get_incompatible())
+        for course in self.courses:
+            incomp_list.append(course.incomp)
         return incomp_list
 
     def get_incompatibilities(self) -> list[str]:
         incomp_list = []
-        for course_name in self._get_possible_incompatiblities():
-            if course_name in self.get_course_names():
-                incomp_list.append(course_name)
+        for course in self._get_possible_incompatiblities():
+            if course in self.courses:
+                incomp_list.append(course)
         return incomp_list
     
     def any_incompatibilites(self) -> bool:
         return bool(self.get_incompatibilities())
     
-    def add_courses(self, courses: list[Course]) -> None:
-        if len(self.get_courses()) + len(courses) > self.get_max_courses():
+    def add_courses(self, *courses: Course) -> None:
+        if len(self.courses) + len(courses) > self.max_course_capacity():
             print(
-                f"{self.get_name()} can contain at most "
-                f"{self.get_max_courses()} courses.\n"
+                f"{self.name} can contain at most "
+                f"{self.max_course_capacity()} courses.\n"
                 f"At most, {REG_SEM_MAX - len(courses)} " 
                 "more courses can be added to this semester."
             )
             return
-        self.courses.extend(courses)
+        self.courses.append(*courses)
 
     def remove_course(self, course: Course) -> None:
-        pass
+        if course not in self.courses:
+            print(f"{course} not in {self.name}")
+            return
+        self.courses.remove(course)
+
+    def is_before(self, other: 'Semester') -> bool:
+        return self.num < other.num
+    
+    def is_after(self, other: 'Semester') -> bool:
+        return self.num > other.num
 
 
 class Plan:
@@ -147,32 +142,23 @@ class Plan:
             sem_list.append(Semester(sem_num))
         return sem_list
 
-    def get_semesters(self) -> list[Semester]:
-        return self.semesters
-
-    def get_required_courses(self) -> list[str]:
-        pass
-
     def add_courses(self, courses: list[Course], sem: Semester) -> None:
         sem.add_courses(courses)
 
     def remove_course(self, course: Course) -> None:
-        pass
+        for sem in self.semesters:
+            for existing_course in sem.courses:
+                if course == existing_course:
+                    sem.remove_course(course)
 
-    def swap_courses(course_1: str, course_2: str) -> None:
+    def swap_courses(course_1: Course, course_2: Course) -> None:
         pass
 
     def are_prerequisities_met(self) -> bool:
         pass
 
     def are_incompatibilites_met(self) -> bool:
-        for semester in self.get_semesters():
+        for semester in self.semesters:
             if semester.get_incompatibilities():
                 return True
         return False
-
-def main():
-    plan = Plan()
-
-if __name__ == '__main__':
-    main()

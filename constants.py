@@ -1,5 +1,5 @@
 # Filename of summary yaml file (DO NOT FORGET .yaml EXT)
-SUMMARY_FILENAME = 'summary_v2.yaml'
+SUMMARY_FILENAME = 'summary.yaml'
 
 # Dictionary key values
 PREREQ = 'prerequisites'
