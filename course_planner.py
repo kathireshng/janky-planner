@@ -5,7 +5,7 @@ class Course:
     """Class representing a given UQ course."""
 
     with open(SUMMARY_FILENAME, 'r') as file:
-        courseInfo = yaml.safe_load(file)
+        COURSE_INFO = yaml.safe_load(file)
 
     def __init__(self, code: str) -> None:
         """Initialises a new course object with the given course code.
@@ -14,8 +14,8 @@ class Course:
             code (str): The 4 letter - 4 digit UQ course code.
         """
         self.code = code
-        self.prereq = self.courseInfo[code][PREREQ]
-        self.incomp = self.courseInfo[code][INCOMP]
+        self.prereq = self.COURSE_INFO[code][PREREQ]
+        self.incomp = self.COURSE_INFO[code][INCOMP]
     
     def get_code(self) -> str:
         """(str): Returns the course's code."""
@@ -84,7 +84,7 @@ class Semester:
                     self._purge_repeated_courses() #TODO Write global function that purges repeated courses or semesters for both
                                                    # Course and Semester classes.
     def get_name(self):
-        return SEM_NAME_TUPLE[self.num]
+        return SEM_NAMES[self.num]
 
     def get_courses(self) -> list[Course]:
         return self.courses
@@ -143,7 +143,7 @@ class Plan:
     
     def _init_semesters(self) -> list[Semester]:
         sem_list = []
-        for sem_num in range(len(SEM_NAME_TUPLE)):
+        for sem_num in range(len(SEM_NAMES)):
             sem_list.append(Semester(sem_num))
         return sem_list
 
@@ -172,9 +172,6 @@ class Plan:
         return False
 
 def main():
-    with open(SUMMARY_FILENAME, 'r') as file:
-        course_info = yaml.safe_load(SUMMARY_FILENAME)
-    
     plan = Plan()
 
 if __name__ == '__main__':

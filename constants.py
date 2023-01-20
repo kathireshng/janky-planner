@@ -25,7 +25,7 @@ YR6_SEM1 = 15
 YR6_SEM2 = 16
 YR6_SUMMER = 17
 
-SEM_NAME_TUPLE = (
+SEM_NAMES = (
     'Year 1 Semester 1', 'Year 1 Semester 2', 'Year 1 Summer Semester',
     'Year 2 Semester 1', 'Year 2 Semester 2', 'Year 2 Summer Semester',
     'Year 3 Semester 1', 'Year 3 Semester 2', 'Year 3 Summer Semester',
