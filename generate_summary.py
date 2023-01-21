@@ -13,9 +13,11 @@ def update_names():
     for course_file in courses_downloads_dir.iterdir():
         if '.html' not in course_file.name:
             continue
-        course_dict[filename2code(course_file.name)] = {PREREQ: None,
-                                                        INCOMP: None
-                                                       }
+        course_dict[filename2code(course_file.name)] = {
+            SEM_OFFERED: [SEM_1, SEM_2],
+            PREREQ: None,
+            INCOMP: None
+        }
 
 def pull_course_codes(line: str) -> list:
     return re.findall('[A-Z]{4}\d{4}', line)

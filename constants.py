@@ -2,6 +2,7 @@
 SUMMARY_FILENAME = 'summary.yaml'
 
 # Dictionary key values
+SEM_OFFERED = 'sem offered'
 PREREQ = 'prerequisites'
 INCOMP = 'incompatible'
 
@@ -34,6 +35,10 @@ SEM_NAMES = (
     'Year 6 Semester 1', 'Year 6 Semester 2', 'Year 6 Summer Semester'
 )
 
+SEM_1 = 'Sem 1'
+SEM_2 = 'Sem 2'
+SUM_SEM = 'Summer'
+
 # Maximum courses for each sem
-SUM_SEM_MAX = 3
+SUM_SEM_MAX = 2
 REG_SEM_MAX = 4

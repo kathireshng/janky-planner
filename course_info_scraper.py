@@ -3,10 +3,6 @@ from time import sleep
 import pyperclip
 #TODO Specify download location from constants.py, rather than manually selecting before download
 
-"""
-Returns a dictionary of each course and its information.
-ALternatively could create a yaml file containing all this information. 
-"""
 pyperclip.copy('https://my.uq.edu.au/programs-courses/course.html?course_code=')
 
 # List of courses left (not case sensitive)
