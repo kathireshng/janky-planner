@@ -1,7 +1,6 @@
 from constants import *
 import yaml
 from pprint import pprint
-from my_courses import initialise_my_plan # See Line 211-2 for why this is here
 import webbrowser
 
 with open(SUMMARY_FILENAME, 'r') as file:
@@ -208,8 +207,11 @@ class Plan:
         return False
     
 def main():
+    from my_courses import initialise_my_plan 
+
     plan = initialise_my_plan() # Just a function that creates a new Plan object and uses add_course() method to add all my courses.
                                 # I did this to keep my courses (≖_≖ ) secret ( ≖_≖)
+
     missing_prereqs = plan.get_missing_prerequisites()
     if missing_prereqs:
         pprint(missing_prereqs)
