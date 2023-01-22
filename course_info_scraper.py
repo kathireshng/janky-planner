@@ -1,9 +1,10 @@
 from pyautogui import *
 from time import sleep
 import pyperclip
+from constants import *
 #TODO Specify download location from constants.py, rather than manually selecting before download
 
-pyperclip.copy('https://my.uq.edu.au/programs-courses/course.html?course_code=')
+pyperclip.copy(URL_BASE)
 
 # List of courses left (not case sensitive)
 # COURSE_LIST = ('ELEC3004', 'STAT2003', 'ELEC2400', 'METR3100',

@@ -1,8 +1,13 @@
 from constants import *
 import yaml
+from pprint import pprint
+from my_courses import initialise_my_plan # See Line 211-2 for why this is here
+import webbrowser
 
 with open(SUMMARY_FILENAME, 'r') as file:
         COURSE_INFO = yaml.safe_load(file)
+
+#TODO MAKE ATTRIBUTES PRIVATE AND HAVE GETTERS AND SETTERS FOR THEM
 
 class Semester:
     def __init__(self, name: str, *courses: str) -> None:
@@ -136,6 +141,12 @@ class Plan:
                 print('\t', name)
             print("\nOr a variable name such as YR1_SEM2 or YR3_SUMMER.")
             return
+        
+        for course in courses:
+            if not course in self._get_course_list():
+                continue
+            print(f"{course} already in plan, in {self._get_semester_of_course(course).name}")
+            return
         self._get_sem_with_name(sem_name).add_courses(*courses)
 
     def remove_course(self, course: str) -> None:
@@ -174,17 +185,21 @@ class Plan:
         sem_A.add_courses(course_B)
         sem_B.add_courses(course_A)
 
-    def are_prerequisities_met(self) -> bool:
+    def get_missing_prerequisites(self) -> dict[str, str]: #FIXME Account for WHEN prerequisites are taken.
+        missing_prereqs_dict = {}
         course_list = self._get_course_list()
         for course in course_list:
+            missing_prereqs_dict[course] = []
             if not COURSE_INFO[course][PREREQ]:
                 continue
             for prereq_list in COURSE_INFO[course][PREREQ]:
-                for prereq_course in prereq_list:
-                    if self._has_course(prereq_course):
-                        continue
-                    return False
-        return True
+                if not set(prereq_list).intersection(set(course_list)):
+                    missing_prereqs_dict[course].append(prereq_list)
+        return {course: missing_prereqs for course, missing_prereqs in missing_prereqs_dict.items() 
+                if missing_prereqs}
+
+    def get_delayed_prerequisites(self) -> dict[str, tuple[str]]:
+        pass   
 
     def any_incompatiblities(self) -> bool:
         for sem in self.semesters:
@@ -193,7 +208,25 @@ class Plan:
         return False
     
 def main():
-    pass
+    plan = initialise_my_plan() # Just a function that creates a new Plan object and uses add_course() method to add all my courses.
+                                # I did this to keep my courses (≖_≖ ) secret ( ≖_≖)
+    missing_prereqs = plan.get_missing_prerequisites()
+    if missing_prereqs:
+        pprint(missing_prereqs)
+        if not input("Open all missing prerequisite course profiles? [y/n] ").lower() == 'y':
+            return
+        first_course = tuple((missing_prereqs.values()))[0][0][0]
+        webbrowser.open(f"{URL_BASE}{first_course}", 1)
+        for missing_prereqs_layered_list in missing_prereqs.values():
+            for list in missing_prereqs_layered_list:
+                for course in list:
+                    if course != first_course:
+                        webbrowser.open(f"{URL_BASE}{course}")
+                        
+        return  
+    print("All prerequisites met!!!")
+
+
 
 if __name__=='__main__':
     main()
