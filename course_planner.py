@@ -5,11 +5,13 @@ with open(SUMMARY_FILENAME, 'r') as file:
         COURSE_INFO = yaml.safe_load(file)
 
 class Semester:
-    def __init__(self, num: int, *courses: str) -> None:
-        self.num = num
-        self.name = SEM_NAMES[num]
+    def __init__(self, name: str, *courses: str) -> None:
+        if not name in SEM_NAMES:
+            raise NameError(f"{name} is not a valid semester name!")
+        self.name = name
+        self._num = self._get_sem_num()
         self.courses = list(courses)
-        if self.is_summer_sem() and len(courses) > SUM_SEM_MAX:
+        if self.get_type() == SUM_SEM and len(courses) > SUM_SEM_MAX:
             print("This is a summer semester course which has at most two"
                     "courses.\n More than two have been given.\n"
                     "This semester will be created without any courses.")
@@ -22,23 +24,27 @@ class Semester:
                     self.courses.remove(courseB)
                     self._purge_repeated_courses() 
 
-    def is_summer_sem(self) -> bool:
-        return self.num % 3 == 2
+    def _get_sem_num(self):
+        nums = [int(word) for word in self.name.split() if word.isdigit()]
+        if len(nums) == 1:
+            return 3*(nums[0])
+        year, sem = nums
+        return 3*(year - 1) + sem
 
     def get_type(self) -> str:
-        if self.is_summer_sem():
+        if self._num % 3 == 0:
             return SUM_SEM
-        if self.num % 3 == 1:
-            return SEM_2
-        return SEM_1
+        if self._num % 3 == 1:
+            return SEM_1
+        return SEM_2
     
     def is_full(self) -> bool:
-        if self.is_summer_sem():
+        if self.get_type() == SUM_SEM:
             return (len(self.courses) == SUM_SEM_MAX)
         return (len(self.courses) == REG_SEM_MAX)
 
     def max_course_capacity(self) -> int:
-        return SUM_SEM_MAX if self.is_summer_sem() else REG_SEM_MAX
+        return SUM_SEM_MAX if self.get_type() == SUM_SEM else REG_SEM_MAX
 
     def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
@@ -80,10 +86,10 @@ class Semester:
         self.courses.remove(course)
 
     def is_before(self, other: 'Semester') -> bool:
-        return self.num < other.num
+        return self._num < other._num
     
     def is_after(self, other: 'Semester') -> bool:
-        return self.num > other.num
+        return self._num > other._num
 
 
 class Plan:
@@ -92,14 +98,14 @@ class Plan:
     
     def _init_semesters(self) -> list[Semester]:
         sem_list = []
-        for sem_num in range(len(SEM_NAMES)):
-            sem_list.append(Semester(sem_num))
+        for sem_name in SEM_NAMES:
+            sem_list.append(Semester(sem_name))
         return sem_list
 
     def _get_course_list(self) -> list[str]:
         course_list = []
         for sem in self.semesters:
-            for course in sem:
+            for course in sem.courses:
                 if not course:
                     continue
                 course_list.append(course)
@@ -107,58 +113,75 @@ class Plan:
 
     def _get_semester_of_course(self, course: 'str') -> Semester:
         for sem in self.semesters:
-            if course in sem:
+            if course in sem.courses:
                 return sem
 
-    def _plan_has_course(self, course: str) -> bool:
+    def _has_course(self, course: str) -> bool:
         for sem in self.semesters:
             if course in sem.courses:
                 return True
         return False
 
-    def add_courses(self, sem: Semester, *courses: str) -> None:
-        sem.add_courses(*courses)
+    def _get_sem_with_name(self, sem_name: str) -> Semester:
+        for sem in self.semesters:
+            if not sem.name == sem_name:
+                continue
+            return sem
+
+    def add_courses(self, sem_name: str, *courses: str) -> None:
+        if not sem_name in SEM_NAMES:
+            print(f"{sem_name} is not a valid semester name.\n"
+                   "Use one of: ")
+            for name in SEM_NAMES:
+                print('\t', name)
+            print("\nOr a variable name such as YR1_SEM2 or YR3_SUMMER.")
+            return
+        self._get_sem_with_name(sem_name).add_courses(*courses)
 
     def remove_course(self, course: str) -> None:
-        for sem in self.semesters:
-            for existing_course in sem.courses:
-                if course == existing_course:
-                    sem.remove_course(course)
+        if not self._has_course(course):
+            print(f"Plan already does not have {course}")
+            return
+        self._get_semester_of_course(course).remove_course(course)
 
-    def swap_courses(self, course_1: str, course_2: str) -> None:
-        sem_1 = self._get_semester_of_course(course_1)
-        sem_2 = self._get_semester_of_course(course_2)
+    def swap_courses(self, course_A: str, course_B: str) -> None:
+        sem_A = self._get_semester_of_course(course_A)
+        sem_B = self._get_semester_of_course(course_B)
 
-        if not (sem_1 and sem_2):
-            if not sem_1:
-                print(f"{course_1} not in plan.")
-            if not sem_2:
-                print(f"{course_1} not in plan.")
+        if not (sem_A and sem_B):
+            if not sem_A:
+                print(f"{course_A} not in plan.")
+            if not sem_B:
+                print(f"{course_A} not in plan.")
             return
 
-        if sem_1.name == sem_2.name:
-            print(f"{course_1} and {course_2} are both already in {sem_1.name}")
+        if sem_A.name == sem_B.name:
+            print(f"{course_A} and {course_B} are both already in {sem_A.name}")
             return
 
-        if not(COURSE_INFO[course_1][SEM_OFFERED] == sem_2.get_type() 
-           and COURSE_INFO[course_2][SEM_OFFERED] == sem_1.get_type()):
-            if COURSE_INFO[course_1][SEM_OFFERED] != sem_2.get_type():
-                print(f"{course_1} not offered in {sem_2.get_type()} ")
-            if COURSE_INFO[course_1][SEM_OFFERED] != sem_2.get_type():
-                print(f"{course_2} not offered in {sem_1.get_type()} ")
+        if not(sem_B.get_type() in COURSE_INFO[course_A][SEM_OFFERED]
+           and sem_A.get_type() in COURSE_INFO[course_B][SEM_OFFERED]):
+
+            if sem_B.get_type() not in COURSE_INFO[course_A][SEM_OFFERED]:
+                print(f"{course_A} not offered in {sem_B.get_type()} ")
+
+            if sem_A.get_type() not in COURSE_INFO[course_B][SEM_OFFERED] :
+                print(f"{course_A} not offered in {sem_B.get_type()} ")
             return
 
-        sem_1.remove_course(course_1)
-        sem_2.remove_course(course_2)
-        sem_1.add_courses(course_2)
-        sem_2.add_courses(course_1)
+        sem_A.remove_course(course_A)
+        sem_B.remove_course(course_B)
+        sem_A.add_courses(course_B)
+        sem_B.add_courses(course_A)
 
     def are_prerequisities_met(self) -> bool:
         course_list = self._get_course_list()
         for course in course_list:
+            if not COURSE_INFO[course][PREREQ]:
+                continue
             for prereq_list in COURSE_INFO[course][PREREQ]:
                 for prereq_course in prereq_list:
-                    if self._plan_has_course(prereq_course):
+                    if self._has_course(prereq_course):
                         continue
                     return False
         return True
