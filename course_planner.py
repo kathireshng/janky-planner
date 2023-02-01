@@ -4,7 +4,16 @@ from pprint import pprint
 import webbrowser
 
 with open(SUMMARY_FILENAME, 'r') as file:
-        COURSE_INFO = yaml.safe_load(file)
+        COURSE_DICT = yaml.safe_load(file)
+
+def get_prereqs(course: str) -> list[list[str]]:
+    return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(PREREQ)
+
+def get_incomps(course: str) -> list[str]:
+    return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(INCOMP)
+
+def get_sem_offered(course: str) -> list[str]:
+     return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(SEM_OFFERED)
 
 #TODO MAKE ATTRIBUTES PRIVATE AND HAVE GETTERS AND SETTERS FOR THEM
 
@@ -53,7 +62,7 @@ class Semester:
     def _get_possible_incompatiblities(self) -> list[str]:
         incomp_list = []
         for course in self.courses:
-            incomp_list.extend(COURSE_INFO[course][INCOMP])
+            incomp_list.extend(get_incomps(course))
         return incomp_list
 
     def get_incompatibilities(self) -> list[str]:
@@ -76,7 +85,7 @@ class Semester:
             )
             return
         for course in courses:
-            if self.get_type() not in COURSE_INFO[course][SEM_OFFERED]:
+            if self.get_type() not in get_sem_offered(course):
                 print(f"{course} is not offered in {self.get_type()}",
                        "Aborting add_courses().", sep='\n')
                 return
@@ -154,6 +163,9 @@ class Plan:
             return
         self._get_semester_of_course(course).remove_course(course)
 
+    def move_course(self, course: str, dest_semester_name: str):
+        pass
+
     def swap_courses(self, course_A: str, course_B: str) -> None:
         sem_A = self._get_semester_of_course(course_A)
         sem_B = self._get_semester_of_course(course_B)
@@ -169,13 +181,13 @@ class Plan:
             print(f"{course_A} and {course_B} are both already in {sem_A.name}")
             return
 
-        if not(sem_B.get_type() in COURSE_INFO[course_A][SEM_OFFERED]
-           and sem_A.get_type() in COURSE_INFO[course_B][SEM_OFFERED]):
+        if not(sem_B.get_type() in get_sem_offered(course_A)
+           and sem_A.get_type() in get_sem_offered(course_B)):
 
-            if sem_B.get_type() not in COURSE_INFO[course_A][SEM_OFFERED]:
+            if sem_B.get_type() not in get_sem_offered(course_A):
                 print(f"{course_A} not offered in {sem_B.get_type()} ")
 
-            if sem_A.get_type() not in COURSE_INFO[course_B][SEM_OFFERED] :
+            if sem_A.get_type() not in get_sem_offered(course_B) :
                 print(f"{course_A} not offered in {sem_B.get_type()} ")
             return
 
@@ -184,21 +196,37 @@ class Plan:
         sem_A.add_courses(course_B)
         sem_B.add_courses(course_A)
 
-    def get_missing_prerequisites(self) -> dict[str, str]: #FIXME Account for WHEN prerequisites are taken.
+    def get_missing_prerequisites(self) -> dict[str, str]:
         missing_prereqs_dict = {}
         course_list = self._get_course_list()
         for course in course_list:
-            missing_prereqs_dict[course] = []
-            if not COURSE_INFO[course][PREREQ]:
+            if not get_prereqs(course):
                 continue
-            for prereq_list in COURSE_INFO[course][PREREQ]:
-                if not set(prereq_list).intersection(set(course_list)):
-                    missing_prereqs_dict[course].append(prereq_list)
+
+            missing_prereqs_dict[course] = []
+            for prereq_list in get_prereqs(course):
+                if set(prereq_list).intersection(set(course_list)):
+                    continue
+                missing_prereqs_dict[course].append(prereq_list)
+
         return {course: missing_prereqs for course, missing_prereqs in missing_prereqs_dict.items() 
                 if missing_prereqs}
 
-    def get_delayed_prerequisites(self) -> dict[str, tuple[str]]:
-        pass   
+    def get_delayed_prerequisites(self) -> dict[str, list[tuple[str]]]:
+        delayed_prereqs_dict = {}
+        course_list = self._get_course_list()
+        for course in course_list:
+            if not get_prereqs(course):
+                continue
+
+            delayed_prereqs_dict[course] = []
+            for prereq_list in get_prereqs(course):
+                if [prereq for prereq in prereq_list if self._has_course(prereq) and self._get_semester_of_course(prereq).is_before(self._get_semester_of_course(course))]:
+                    continue
+                delayed_prereqs_dict[course].extend([(prereq, self._get_semester_of_course(course).name) for prereq in prereq_list if self._has_course(prereq)])
+        
+        return {course: delayed_prereqs_list for course, delayed_prereqs_list in delayed_prereqs_dict.items() if delayed_prereqs_list}
+
 
     def any_incompatiblities(self) -> bool:
         for sem in self.semesters:
@@ -207,15 +235,17 @@ class Plan:
         return False
     
 def main():
-    from my_courses import initialise_my_plan 
+    from misc_functions import initialise_my_plan 
 
     plan = initialise_my_plan() # Just a function that creates a new Plan object and uses add_course() method to add all my courses.
                                 # I did this to keep my courses (≖_≖ ) secret ( ≖_≖)
-
+    print("DELAYED PREREQUSIITES")
+    pprint(plan.get_delayed_prerequisites())
+    print("\nMISSING PREREQUISITES")
     missing_prereqs = plan.get_missing_prerequisites()
     if missing_prereqs:
         pprint(missing_prereqs)
-        if not input("Open all missing prerequisite course profiles? [y/n] ").lower() == 'y':
+        if not input("Open all missing prerequisite course profiles in browser? [y/n] ").lower() == 'y':
             return
         first_course = tuple((missing_prereqs.values()))[0][0][0]
         webbrowser.open(f"{URL_BASE}{first_course}", 1)

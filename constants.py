@@ -4,6 +4,12 @@ SUMMARY_FILENAME = 'summary.yaml'
 # URL info
 URL_BASE = 'https://my.uq.edu.au/programs-courses/course.html?course_code='
 
+# Relative location of Courses folder with html files
+COURSE_DIR_STR = 'Courses'
+
+# Default course name
+DEFAULT = 'DEFAULT'
+
 # Dictionary key values
 SEM_OFFERED = 'sem offered'
 PREREQ = 'prerequisites'
@@ -39,10 +45,19 @@ SEM_NAMES = (
     YR6_SEM1, YR6_SEM2, YR6_SUMMER
 )
 
-SEM_1 = 'Sem 1'
-SEM_2 = 'Sem 2'
-SUM_SEM = 'Summer'
+SEM_NAMES_ARRAY = ('',
+    ('', YR1_SEM1, YR1_SEM2, YR1_SUMMER),
+    ('', YR2_SEM1, YR2_SEM2, YR2_SUMMER),
+    ('', YR3_SEM1, YR3_SEM2, YR3_SUMMER),
+    ('', YR4_SEM1, YR4_SEM2, YR4_SUMMER),
+    ('', YR5_SEM1, YR5_SEM2, YR5_SUMMER),
+    ('', YR6_SEM1, YR6_SEM2, YR6_SUMMER)
+)
+
+SEM_1 = 'Semester 1'
+SEM_2 = 'Semester 2'
+SUM_SEM = 'Summer Semester'
 
 # Maximum courses for each sem
 SUM_SEM_MAX = 2
-REG_SEM_MAX = 4
+REG_SEM_MAX = 5
