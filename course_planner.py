@@ -6,11 +6,24 @@ import webbrowser
 with open(SUMMARY_FILENAME, 'r') as file:
         COURSE_DICT = yaml.safe_load(file)
 
-def get_prereqs(course: str) -> list[list[str]]:
-    return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(PREREQ)
-
 def get_incomps(course: str) -> list[str]:
     return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(INCOMP)
+
+def get_prereqs(course: str) -> list[list[str]]:
+    prereqs = COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(PREREQ)
+    prereqs_copy = []
+    if not prereqs:
+        return
+    for sublist in prereqs:
+        sublist_copy = sublist.copy()
+        for prereq_course in sublist:
+            if not prereq_course in COURSE_DICT.keys():
+                continue
+            if not get_incomps(prereq_course):
+                continue
+            sublist_copy.extend(get_incomps(prereq_course))
+        prereqs_copy.append(sublist_copy)
+    return prereqs_copy
 
 def get_sem_offered(course: str) -> list[str]:
      return COURSE_DICT.get(course, COURSE_DICT[DEFAULT]).get(SEM_OFFERED)
@@ -227,7 +240,6 @@ class Plan:
         
         return {course: delayed_prereqs_list for course, delayed_prereqs_list in delayed_prereqs_dict.items() if delayed_prereqs_list}
 
-
     def any_incompatiblities(self) -> bool:
         for sem in self.semesters:
             if sem.get_incompatibilities():
@@ -236,8 +248,7 @@ class Plan:
     
 def main():
     from misc_functions import initialise_my_plan 
-
-    plan = initialise_my_plan() # Just a function that creates a new Plan object and uses add_course() method to add all my courses.
+    plan = initialise_my_plan('me') # Just a function that creates a new Plan object and uses add_course() method to add all my courses.
                                 # I did this to keep my courses (≖_≖ ) secret ( ≖_≖)
     print("DELAYED PREREQUSIITES")
     pprint(plan.get_delayed_prerequisites())
@@ -257,8 +268,6 @@ def main():
                         
         return  
     print("All prerequisites met!!!")
-
-
 
 if __name__=='__main__':
     main()

@@ -4,14 +4,12 @@ import yaml
 from constants import *
 from bs4 import BeautifulSoup
 
-course_dict = {}
-courses_downloads_dir = Path('Courses') #FIXME Currently hardcoded. Directory should be specified from constants.py
 
 def filename2code(filename: str) -> str:
     return filename.split('.')[0].upper()
 
-def update_names():
-    for course_file in courses_downloads_dir.iterdir():
+def update_names(course_dict: dict, course_html_dir: Path):
+    for course_file in course_html_dir.iterdir():
         if '.html' not in course_file.name:
             continue
         course_dict[filename2code(course_file.name)] = {
@@ -21,15 +19,43 @@ def update_names():
         }
 
 def pull_course_codes(line: str) -> list:
-    return re.findall('[A-Z]{4}\d{4}', line)
+    codes = re.findall('[A-Z]{4}\d{4}', line)
+    for highschool_course in HS_COURSES:
+        if highschool_course in line:
+            codes.append(highschool_course)
+    return codes
 
-def get_prerequisites(line: str) -> list[list[str]]: # FIXME: Sometimes just gets it wrong, e.g. returns [['MATH1051'], ['MATH1071']] instead of [['MATH1051', 'MATH1071']]
-    prereq_list = [pull_course_codes(group) for group in re.findall('\((.*?)\)', line)]
-    nested_course_list = [course for group in prereq_list for course in group]
-    all_course_list = pull_course_codes(line)
-    for remaining_course in list(set(all_course_list) - set(nested_course_list)):
-        prereq_list.append([remaining_course])
-    return prereq_list
+def pull_incompatibles(html: str) -> list[str]:
+    incompsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-incompatible')
+    if not incompsLine:
+        return
+    return pull_course_codes(incompsLine.text)
+
+def pull_prerequisites(html: str) -> list[list[str]]:
+    prereqsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-prerequisite')
+    if not prereqsLine:
+        return
+    prereqsText = prereqsLine.text
+
+    if not '(' in prereqsText or not [pull_course_codes(textInBrackets) for textInBrackets in re.findall('\((.*?)\)', prereqsText) if pull_course_codes(textInBrackets)]: # Assumption: Prerequisites without brackets have only one of "and" or "or" between courses
+        if ' and ' in prereqsText:
+            final_list = [[courseCode] for courseCode in pull_course_codes(prereqsText)]
+        
+        elif ' or ' in prereqsText or ',' in prereqsText:
+            final_list = [pull_course_codes(prereqsText)]
+       
+        else:
+            final_list = [pull_course_codes(prereqsText)]
+    
+    else:
+        prereqList = [pull_course_codes(group) for group in re.findall('\((.*?)\)', prereqsText) if pull_course_codes(group)]
+        nested_course_list = [course for group in prereqList for course in group]
+        all_course_list = pull_course_codes(prereqsText)
+        for remaining_course in list(set(all_course_list) - set(nested_course_list)):
+            prereqList.append([remaining_course])
+        final_list = prereqList
+
+    return final_list
 
 def pull_sem_offered(html: str) -> list[str]:
     current_offerings_table = BeautifulSoup(html, 'html.parser').find('table', id="course-current-offerings")
@@ -38,43 +64,39 @@ def pull_sem_offered(html: str) -> list[str]:
 
     return sems_offered_list_str
 
-#TODO: Refactor update_details() and pull_course_codes() to fit within 80 char line length.
-#TODO: Refactor get prereqs and create dedicated incomps fetcher using BeautifulSoup
-def update_details():
-    for course_file in courses_downloads_dir.iterdir():
-        if '.html' not in course_file.name:
+def update_details(course_dict: dict, courses_html_dir: Path):
+    for course_file in courses_html_dir.iterdir():
+        course_filename = course_file.name
+        if '.html' not in course_filename:
             continue
         with open(str(course_file), 'r') as file:
             html = file.read()
-            file.seek(0)
-            for line in file:
-                if 'course-prerequisite' in line:
-                    course_dict[filename2code(course_file.name)][PREREQ] = get_prerequisites(line)
-                elif 'course-incompatible' in line:
-                    course_dict[filename2code(course_file.name)][INCOMP] = pull_course_codes(line)
-        if not html:
-            print('NO HTML!!!!')
-            print(course_file.name)
-        else:
-            print(course_file.name, "ALL GOOD!", sep=': ')
-        course_dict[filename2code(course_file.name)][SEM_OFFERED] = pull_sem_offered(html)
+        course_dict[filename2code(course_filename)][PREREQ] = pull_prerequisites(html)
+        course_dict[filename2code(course_filename)][INCOMP] = pull_incompatibles(html)
+        course_dict[filename2code(course_filename)][SEM_OFFERED] = pull_sem_offered(html)
     
-
-def add_default_course():
+def add_default_course(course_dict: dict):
     course_dict[DEFAULT] = {}
     course_dict[DEFAULT][PREREQ] = None
     course_dict[DEFAULT][INCOMP] = None
     course_dict[DEFAULT][SEM_OFFERED] = [SEM_1, SEM_2]
 
-def write2yaml():
-    with open(SUMMARY_FILENAME, 'w') as file:
+def write2yaml(course_dict: dict, summary_filename=SUMMARY_FILENAME, overwrite_existing=False):
+    if not overwrite_existing and Path(summary_filename).exists():
+        with open(summary_filename, 'r') as file:
+            existingCourseDict = yaml.safe_load(file)
+            course_dict.update(existingCourseDict)
+    with open(summary_filename, 'w') as file:
         file.write(yaml.dump(course_dict))
 
-def main():
-    update_names()
-    update_details()
-    add_default_course()
-    write2yaml()
+def generate_summary():
+    course_dict = {}
+    courses_html_path = Path(COURSE_DIR_STR)
+
+    update_names(course_dict, courses_html_path)
+    update_details(course_dict, courses_html_path)
+    add_default_course(course_dict)
+    write2yaml(course_dict)
 
 if __name__ == '__main__':
-    main()
+    generate_summary()
