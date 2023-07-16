@@ -1,4 +1,3 @@
-import pyperclip
 from constants import *
 from selenium import webdriver
 from pathlib import Path
@@ -33,7 +32,7 @@ def get_course_info(course_list: list[str], dest_dir=COURSE_DIR_STR):
         download_course_info(course_code, course_dir, browser)
     browser.close()
 
-def get_course_codes_from_webpage(url: str):
+def get_course_codes_from_webpage(url: str) -> list[str]:
     browser = webdriver.Safari()
     browser.minimize_window()
     browser.get(url)
@@ -46,12 +45,11 @@ def get_course_codes_from_webpage(url: str):
             continue
         if candidate_code[0:4].isalpha() and candidate_code[4:8].isnumeric():
             course_codes.append(text[i:i+8].upper())
-    course_codes.sort()
-    for course_code in course_codes:
-        print(course_code)
-
+    return course_codes
+    
 def main():
-    get_course_codes_from_webpage(BENGG_COURSE_LIST)
+    course_list = get_course_codes_from_webpage(BENGG_COURSE_LIST)
+    get_course_info(course_list)
 
 if __name__ == '__main__':
     main()
