@@ -10,7 +10,7 @@ def scrape_course_names(url: str) -> list[str]:
     browser.minimize_window()
     browser.get(url)
     course_list = browser.find_elements_by_class_name('coursebox')
-    course_names = [course.text for course in course_list]
+    course_names = [course.text.lower() for course in course_list]
     browser.close()
     return course_names
 
@@ -18,8 +18,9 @@ def download_course_info(course_code: str, dest_dir: Path, browser: webdriver.Sa
     if (dest_dir / course_code).with_suffix('.html').exists():
         print(f"{course_code.upper()} already in {str(dest_dir)}")
         return
-    browser.get(URL_BASE + course_code)
-    with open((dest_dir / course_code).with_suffix('.html'), 'w') as file:
+    course_code_lower = course_code.lower()
+    browser.get(URL_BASE + course_code_lower)
+    with open((dest_dir / course_code_lower).with_suffix('.html'), 'w') as file:
         file.write(browser.page_source)
 
 def get_course_info(course_list: list[str], dest_dir=COURSE_DIR_STR):
