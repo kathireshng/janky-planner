@@ -17,6 +17,7 @@ DEFAULT = 'DEFAULT'
 SEM_OFFERED = 'sem offered'
 PREREQ = 'prerequisites'
 INCOMP = 'incompatible'
+UNITS = 'units'
 
 #TODO figure out a more succinct way to represent each semester's name
 # Semester names

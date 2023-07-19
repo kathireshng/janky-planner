@@ -59,10 +59,18 @@ def pull_prerequisites(html: str) -> list[list[str]]:
 
 def pull_sem_offered(html: str) -> list[str]:
     current_offerings_table = BeautifulSoup(html, 'html.parser').find('table', id="course-current-offerings")
+    if not current_offerings_table:
+        return
     sems_offered_list_soup = current_offerings_table.find_all('a', id=re.compile('course-offering-.-sem'))
     sems_offered_list_str = list(set([sem for soup_obj in sems_offered_list_soup for sem in (SEM_1, SEM_2, SUM_SEM) if sem in soup_obj.text]))
 
     return sems_offered_list_str
+
+def pull_units(html: str) -> int:
+    unitsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-units')
+    if not unitsLine:
+        return
+    return int(unitsLine.text.split(' ')[0])
 
 def update_details(course_dict: dict, courses_html_dir: Path):
     for course_file in courses_html_dir.iterdir():
@@ -74,6 +82,8 @@ def update_details(course_dict: dict, courses_html_dir: Path):
         course_dict[filename2code(course_filename)][PREREQ] = pull_prerequisites(html)
         course_dict[filename2code(course_filename)][INCOMP] = pull_incompatibles(html)
         course_dict[filename2code(course_filename)][SEM_OFFERED] = pull_sem_offered(html)
+        course_dict[filename2code(course_filename)][UNITS] = pull_units(html)
+
     
 def add_default_course(course_dict: dict):
     course_dict[DEFAULT] = {}
