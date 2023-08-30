@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from constants import *
 from bs4 import BeautifulSoup
-
+from bs4 import element
 
 def filename2code(filename: str) -> str:
     return filename.split('.')[0].upper()
@@ -18,24 +18,43 @@ def update_names(course_dict: dict, course_html_dir: Path):
             INCOMP: None
         }
 
-def pull_course_codes(line: str) -> list:
-    codes = re.findall('[A-Z]{4}\d{4}', line)
-    for highschool_course in HS_COURSES:
-        if highschool_course in line:
-            codes.append(highschool_course)
-    return codes
+# make a function that finds four letters followed by four numbers. for example, mech2300, elec2004. Letters can be any case
 
+# def pull_course_codes(tag) -> list[str]:
+#     codeList = []
+#     codes = re.findall(''[A-Z]{4}\d{4}'', tag.text)
+
+def pull_course_codes(tag) -> list[str]:
+    codeList = []
+    
+    codes = re.findall('[A-Z]{4}\d{4}', tag.text)
+    if tag.text.strip() and not bool(codes):
+        return 'Special rules apply'
+    
+    if not codes:
+        codes = re.findall('[A-Z]{4}\d{4}', tag.find_next('p').text)
+    codeList.extend(codes)
+        
+    # for highschool_course in HS_COURSES:
+    #     if highschool_course in line:
+    #         codes.append(highschool_course)
+    return codeList
+    
 def pull_incompatibles(html: str) -> list[str]:
-    incompsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-incompatible')
-    if not incompsLine:
+    parser = BeautifulSoup(html, 'html.parser')
+    incompsResultSet = parser.find_all(id='course-incompatible')
+    if not incompsResultSet:
         return
-    return pull_course_codes(incompsLine.text)
+    incompsTag = incompsResultSet[0]
+    return pull_course_codes(incompsTag)
 
-def pull_prerequisites(html: str) -> list[list[str]]:
-    prereqsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-prerequisite')
-    if not prereqsLine:
+def pull_prerequisites(html: str) -> list[str]:
+    parser = BeautifulSoup(html, 'html.parser')
+    prereqsResultSet = parser.find_all(id='course-prerequisite')
+    if not prereqsResultSet:
         return
-    return pull_course_codes(prereqsLine.text)``
+    prereqsTag = prereqsResultSet[0]
+    return pull_course_codes(prereqsTag)
 
 def pull_sem_offered(html: str) -> list[str]:
     current_offerings_table = BeautifulSoup(html, 'html.parser').find('table', id="course-current-offerings")
