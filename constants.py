@@ -2,7 +2,7 @@
 DEBUG = True
 
 # Filename of summary yaml file (DO NOT FORGET .yaml EXT)
-SUMMARY_FILENAME = 'summary_v2.yaml'
+SUMMARY_FILENAME = 'summary copy.yaml'
 
 # URL info
 URL_BASE = 'https://my.uq.edu.au/programs-courses/course.html?course_code='

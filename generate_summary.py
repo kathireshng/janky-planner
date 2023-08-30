@@ -35,27 +35,7 @@ def pull_prerequisites(html: str) -> list[list[str]]:
     prereqsLine = BeautifulSoup(html, 'html.parser').find('p', id='course-prerequisite')
     if not prereqsLine:
         return
-    prereqsText = prereqsLine.text
-
-    if not '(' in prereqsText or not [pull_course_codes(textInBrackets) for textInBrackets in re.findall('\((.*?)\)', prereqsText) if pull_course_codes(textInBrackets)]: # Assumption: Prerequisites without brackets have only one of "and" or "or" between courses
-        if ' and ' in prereqsText:
-            final_list = [[courseCode] for courseCode in pull_course_codes(prereqsText)]
-        
-        elif ' or ' in prereqsText or ',' in prereqsText:
-            final_list = [pull_course_codes(prereqsText)]
-       
-        else:
-            final_list = [pull_course_codes(prereqsText)]
-    
-    else:
-        prereqList = [pull_course_codes(group) for group in re.findall('\((.*?)\)', prereqsText) if pull_course_codes(group)]
-        nested_course_list = [course for group in prereqList for course in group]
-        all_course_list = pull_course_codes(prereqsText)
-        for remaining_course in list(set(all_course_list) - set(nested_course_list)):
-            prereqList.append([remaining_course])
-        final_list = prereqList
-
-    return final_list
+    return pull_course_codes(prereqsLine.text)``
 
 def pull_sem_offered(html: str) -> list[str]:
     current_offerings_table = BeautifulSoup(html, 'html.parser').find('table', id="course-current-offerings")
